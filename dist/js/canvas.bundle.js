@@ -97,69 +97,91 @@
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/js/utils.js");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_utils__WEBPACK_IMPORTED_MODULE_0__);
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
 
 var canvas = document.querySelector('canvas');
 var c = canvas.getContext('2d');
-canvas.width = innerWidth;
-canvas.height = innerHeight;
-var mouse = {
-  x: innerWidth / 2,
-  y: innerHeight / 2
-};
-var colors = ['#2185C5', '#7ECEFD', '#FFF6E5', '#FF7F66']; // Event Listeners
+var vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+var vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+canvas.width = vw;
+canvas.height = vh;
+var mouse = {};
+var colors = ['#205959', '#F2E74B', '#F2B33D', '#F29544', '#8C7161']; // Event Listeners
 
 addEventListener('mousemove', function (event) {
   mouse.x = event.clientX;
   mouse.y = event.clientY;
 });
 addEventListener('resize', function () {
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
+  canvas.width = screen.width;
+  canvas.height = screen.height;
   init();
-}); // Objects
+});
+var maxRadius = 35; // Objects
 
-var _Object = /*#__PURE__*/function () {
-  function Object(x, y, radius, color) {
-    _classCallCheck(this, Object);
+function Circle(xCoordinate, yCoordinate, radius) {
+  var randomNumber = Math.floor(Math.random() * 4);
+  var randomTrueOrFalse = Math.floor(Math.random() * 2);
+  this.xCoordinate = xCoordinate;
+  this.yCoordinate = yCoordinate;
+  this.radius = radius;
+  this.color = colors[randomNumber];
 
-    this.x = x;
-    this.y = y;
-    this.radius = radius;
-    this.color = color;
+  if (randomTrueOrFalse == 1) {
+    this.xVelocity = -Math.random() * 1;
+  } else {
+    this.xVelocity = Math.random() * 1;
   }
 
-  _createClass(Object, [{
-    key: "draw",
-    value: function draw() {
-      c.beginPath();
-      c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-      c.fillStyle = this.color;
-      c.fill();
-      c.closePath();
+  if (randomTrueOrFalse == 1) {
+    this.yVelocity = -Math.random() * 1;
+  } else {
+    this.yVelocity = Math.random() * 1;
+  } // As distance gets closer to 0, increase radius
+
+
+  this.update = function () {
+    var xDistance = mouse.x - this.xCoordinate;
+    var yDistance = mouse.y - this.yCoordinate;
+    var originalRadius = radius;
+    this.xCoordinate += this.xVelocity;
+    this.yCoordinate += this.yVelocity; // Movement Functions
+
+    if (this.xCoordinate + this.radius > canvas.width || this.xCoordinate - this.radius < 0) {
+      this.xVelocity = -this.xVelocity;
     }
-  }, {
-    key: "update",
-    value: function update() {
-      this.draw();
+
+    if (this.yCoordinate + this.radius > canvas.height || this.yCoordinate - this.radius < 0) {
+      this.yVelocity = -this.yVelocity;
+    } // Radius Decrease Functions
+    // When distance between circle center and mouse on horizontal axis is less than 50, increase radius until it is equal to 35
+
+
+    if (xDistance < 50 && xDistance > -50 && this.radius < maxRadius && yDistance < 50 && yDistance > -50) {
+      this.radius += 2;
+    } else if (xDistance >= 50 && originalRadius < this.radius || xDistance <= -50 && originalRadius < this.radius || yDistance >= 50 && originalRadius < this.radius || yDistance <= -50 && originalRadius < this.radius) {
+      this.radius -= 2;
     }
-  }]);
 
-  return Object;
-}(); // Implementation
+    this.draw();
+  };
+
+  this.draw = function () {
+    c.beginPath();
+    c.arc(this.xCoordinate, this.yCoordinate, Math.abs(this.radius), 0, Math.PI * 2);
+    c.fillStyle = this.color;
+    c.fill();
+  };
+} // Implementation
 
 
-var objects;
+var circleArray = [];
 
 function init() {
-  objects = [];
-
-  for (var i = 0; i < 400; i++) {// objects.push()
+  for (var i = 0; i < 800; i++) {
+    var randomXCoordinate = Math.random() * canvas.width;
+    var randomYCoordinate = Math.random() * canvas.height;
+    var randomRadius = Math.random() * 7;
+    circleArray.push(new Circle(randomXCoordinate, randomYCoordinate, randomRadius));
   }
 } // Animation Loop
 
@@ -167,9 +189,11 @@ function init() {
 function animate() {
   requestAnimationFrame(animate);
   c.clearRect(0, 0, canvas.width, canvas.height);
-  c.fillText('HTML CANVAS BOILERPLATE', mouse.x, mouse.y); // objects.forEach(object => {
-  //  object.update()
-  // })
+  c.fillStyle = "#D9D9D9";
+  c.fillRect(0, 0, canvas.width, canvas.height);
+  circleArray.forEach(function (object) {
+    object.update();
+  });
 }
 
 init();
